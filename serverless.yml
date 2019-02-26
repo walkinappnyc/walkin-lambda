@@ -1,0 +1,15 @@
+service: walkin-xml-lambda
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+
+functions:
+  cron-job:
+    handler: handler.cron
+    timeout: 300
+    events:
+      - schedule: 
+        rate: cron(0 * * * *)
+        enable: true

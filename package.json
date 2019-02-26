@@ -1,0 +1,17 @@
+{
+  "name": "walkin-xml-lambda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "date-time": "^2.1.0",
+    "request": "^2.88.0",
+    "xml-stream": "^0.4.5",
+    "xml2js": "^0.4.19"
+  }
+}
