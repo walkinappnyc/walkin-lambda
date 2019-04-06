@@ -16,7 +16,7 @@ module.exports.cron = (event, context, callback) => {
   //     input: event,
   //   }),
   // };
-  function getXMLFeeds() {
+function getXMLFeeds() {
 	let options = {
 		url: `${XMLUrl}`,
 		method: 'GET',
@@ -116,7 +116,7 @@ function createProperties(xml_feeds) {
 				      proximity: train.proximity
 				    });
 				  });
-				  console.log(transportationList)
+				  // console.log(transportationList)
 				  return transportationList;
 				}
 	    		// console.log(`**** ${JSON.stringify(data)} ***`)
@@ -225,8 +225,13 @@ function createProperties(xml_feeds) {
 				  "nav_state": ""
 				}
 
+				let str = `${details[0].price[0]}` + `${location[0].address[0]}` + `${location[0].apartment[0]}` + `${location[0].city[0]}` + `${location[0].state[0]}` + `${location[0].zipcode[0]}`
+	    		// console.log(`${str}`)
+	    		let downcase = str.toLowerCase()
+	    		let xml_id = downcase.replace(/ /g,'')
+	    		console.log(`${xml_id}`)
 
-				template.xml_id = `${$.id}-${item.id}`
+				template.xml_id = `${xml_id}`
 				template.apply_url = applyUrl
 				template.location = {
 					"address": `${location[0].address[0]}`,
@@ -377,7 +382,7 @@ function createProperties(xml_feeds) {
 				// console.log(`----${JSON.stringify(openHouseArray)}`)
 				// template.open_houses = openHouseArray
 				let transformedTrains = transformTransportation(parsedTrains)
-				console.log(`${transformedTrains}`)
+				// console.log(`${transformedTrains}`)
 				template.media = parsedMedia
 				template.transportation = transformedTrains
 				template.incentives = parsedIncentives
