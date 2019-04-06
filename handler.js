@@ -3,7 +3,6 @@
 const parseString = require('xml2js').parseString
 const request = require('request')
 const fs = require('fs')
-const XmlStream = require('xml-stream')
 const dateTime = require('date-time')
 
 
