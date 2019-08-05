@@ -175,6 +175,7 @@ function createProperties(xml_feeds) {
 
 	    		let template = {
 				  "xml_id":"",
+				  "unit_id":"",
 				  "apply_url": "",
 				  "landlord":{
 				    "company":""
@@ -231,6 +232,8 @@ function createProperties(xml_feeds) {
 	    		let xml_id = downcase.replace(/ /g,'')
 	    		console.log(`${xml_id}`)
 
+
+				template.unit_id = `${$.id}`
 				template.xml_id = `${xml_id}`
 				template.apply_url = applyUrl
 				template.location = {
