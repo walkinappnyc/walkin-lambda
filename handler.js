@@ -2,11 +2,58 @@
 
 const parseString = require('xml2js').parseString
 const request = require('request')
+const util = require('util');
 const fs = require('fs')
 const dateTime = require('date-time')
 
+const {
+	BRANCH_IO_KEY,
+	BRANCH_IO_DESKTOP_URL = '',
+	BRANCH_IO_IOS_DEEPLINK_PATH = '',
+    BRANCH_IO_RESET_LINKS,
+} = process.env;
 
 const XMLUrl = `https://api.walk.in/api/Landlords`
+
+const postRequest = util.promisify(request.post);
+const patchRequest = util.promisify(request.patch);
+const getRequest = util.promisify(request.get);
+
+const noOp = () => {}
+
+async function generateBranchIODeepLink(unitId) {
+	if (!BRANCH_IO_KEY) {
+		return null;
+	}
+
+	const body = {
+		branch_key: BRANCH_IO_KEY,
+		feature: 'self-showing',
+		data: {
+			$desktop_url: BRANCH_IO_DESKTOP_URL,
+			$ios_deeplink_path: BRANCH_IO_IOS_DEEPLINK_PATH,
+			unitId,
+		},
+	};
+	const resp = await postRequest({
+		url: 'https://api2.branch.io/v1/url',
+		json: true,
+		body,
+	});
+
+	const { url = null } = resp.toJSON().body;
+	return url;
+}
+
+async function getPropBranchIOLink(xmlId) {
+    const resp = await getRequest(`https://api.walk.in/api/Properties/${xmlId}`);
+
+    const { branchio_link: link = null } = JSON.parse(resp.toJSON().body) || {};
+
+	return link;
+}
+
+
 
 module.exports.cron = (event, context, callback) => {
   // return {
@@ -248,7 +295,7 @@ function createProperties(xml_feeds) {
 				template.neighborhood = `${location[0].neighborhood[0]}`
 				template.nav_city = `${location[0].city[0]}`
 				template.nav_state = `${location[0].state[0]}`
-				template.agents = [ 
+				template.agents = [
 					{
 						"name": `${agents[0].agent[0].name[0]}`,
 						"company": `${agents[0].agent[0].company[0]}`,
@@ -319,21 +366,21 @@ function createProperties(xml_feeds) {
 				template.details = {
 					"amenities": {
 						"unit": `${details[0].amenities[0].unit[0].amenity}`,
-						"building": `${details[0].amenities[0].building[0].amenity}`		
+						"building": `${details[0].amenities[0].building[0].amenity}`
 					},
 					"bathrooms": `${details[0].bathrooms[0]}`,
 					"bedrooms": `${details[0].bedrooms[0]}`,
 					"description": {
 						"unit": `${details[0].description[0].unit}`,
 						"building": `${details[0].description[0].building}`
-						
+
 					},
 					"half_baths": `${details[0].half_baths[0]}`,
 					"no_fee": `${details[0].noFee[0]}`,
 					"price": `${details[0].price[0]}`,
 					"property_type": `${details[0].propertyType[0]}`,
 					"total_rooms": `${details[0].totalrooms[0]}`
-					
+
 				}
 
 				let unit = details[0].amenities[0].unit[0].amenity
@@ -394,6 +441,7 @@ function createProperties(xml_feeds) {
 				template.landlord = item.company
 				template.updated_at = dateTime()
 
+
 				// console.log(`${item.id}`)
 				// console.log(`${item.isActive}`)
 				// console.log(`${item.company}`)
@@ -422,10 +470,31 @@ function createProperties(xml_feeds) {
 		    		body: template
 	    		}
 
-	    		request(options, function(err, res, body) {
-	    			// console.log(JSON.stringify(item.details))
-	    			// console.log(body)
-	    		})
+	    		request(options, async function(err, res, property) {
+	    			const { xml_id: xmlId, unit_id: unitId } = property;
+
+	    			const existingLink = await getPropBranchIOLink(xmlId);
+
+					if (BRANCH_IO_RESET_LINKS === 'true' || existingLink == null) {
+						const branchioLink = await generateBranchIODeepLink(unitId);
+
+						console.log('link', branchioLink);
+
+						if (branchioLink) {
+							await patchRequest({
+								url: 'https://api.walk.in/api/Properties/branchio',
+								json: true,
+								body: {
+								    unitId,
+									branchioLink,
+								},
+							}).catch(noOp);
+						}
+					}
+					// console.log(JSON.stringify(item.details))
+
+	    			// console.log('body:', body)
+				})
 	    	})
 		})
 		})
