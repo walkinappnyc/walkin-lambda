@@ -7,8 +7,8 @@ const dateTime = require('date-time')
 
 const {
 	BRANCH_IO_KEY,
-	BRANCH_IO_DESKTOP_URL = '',
-	BRANCH_IO_IOS_DEEPLINK_PATH = '',
+	BRANCH_IO_DESKTOP_URL = null,
+	BRANCH_IO_IOS_DEEPLINK_PATH = null,
     BRANCH_IO_RESET_LINKS,
 } = process.env;
 
@@ -29,11 +29,18 @@ async function generateBranchIODeepLink(unitId) {
 		branch_key: BRANCH_IO_KEY,
 		feature: 'self-showing',
 		data: {
-			$desktop_url: BRANCH_IO_DESKTOP_URL,
-			$ios_deeplink_path: BRANCH_IO_IOS_DEEPLINK_PATH,
 			unitId,
 		},
 	};
+
+	if (BRANCH_IO_DESKTOP_URL) {
+	    body.data.$desktop_url = BRANCH_IO_DESKTOP_URL;
+	}
+
+	if (BRANCH_IO_IOS_DEEPLINK_PATH) {
+		body.data.$ios_deeplink_path = BRANCH_IO_IOS_DEEPLINK_PATH;
+	}
+
 	const resp = await postRequest({
 		url: 'https://api2.branch.io/v1/url',
 		json: true,
